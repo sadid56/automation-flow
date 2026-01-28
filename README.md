@@ -2,6 +2,9 @@
 
 This project consists of a client-side application built with Next.js and a server-side API built with Express and TypeScript.
 
+Live Link: https://automation-workflow-xi.vercel.app
+Server Link: https://automation-flow-server.vercel.app/api/v1/health
+
 ## Project Structure
 
 - `client/`: Next.js frontend application.
