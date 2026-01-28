@@ -31,11 +31,13 @@ export default function AutomationsPage() {
   const [showTestPrompt, setShowTestPrompt] = useState<string | null>(null);
   const [testEmail, setTestEmail] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [createError, setCreateError] = useState<string | null>(null);
   const { mutate: runTest, isPending: isTesting } = useTestAutomation(showTestPrompt || "");
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (newAutomationName.trim()) {
+      setCreateError(null);
       createAutomation(
         {
           name: newAutomationName.trim(),
@@ -49,6 +51,14 @@ export default function AutomationsPage() {
           onSuccess: () => {
             setIsCreateDialogOpen(false);
             setNewAutomationName("");
+          },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onError: (error: any) => {
+            if (error?.message?.includes("duplicate key error") || error.response?.status === 400) {
+              setCreateError("An automation with this name already exists. Please choose a different name.");
+            } else {
+              setCreateError("An error occurred while creating the automation.");
+            }
           },
         },
       );
@@ -207,11 +217,15 @@ export default function AutomationsPage() {
                 <Input
                   id='name'
                   placeholder='e.g. Welcome Series'
-                  className='col-span-3 h-12'
+                  className={`col-span-3 h-12 ${createError ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                   value={newAutomationName}
-                  onChange={(e) => setNewAutomationName(e.target.value)}
+                  onChange={(e) => {
+                    setNewAutomationName(e.target.value);
+                    if (createError) setCreateError(null);
+                  }}
                   autoFocus
                 />
+                {createError && <p className='text-sm font-medium text-red-500 mt-1'>{createError}</p>}
               </div>
             </div>
             <DialogFooter>
