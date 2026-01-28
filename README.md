@@ -1,4 +1,4 @@
-# Message Mind - Automation Flow
+# Automation Flow
 
 This project consists of a client-side application built with Next.js and a server-side API built with Express and TypeScript.
 
