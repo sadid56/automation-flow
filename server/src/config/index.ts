@@ -8,4 +8,5 @@ export const config = {
   port: process.env.PORT || 5001,
   apiVersion: process.env.API_VERSION || 'v1',
   corsOrigin: process.env.CORS_ORIGIN || '*',
+  mongoUri: process.env.MONGODB_URI || '',
 };

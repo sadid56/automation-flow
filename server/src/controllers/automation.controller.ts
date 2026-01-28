@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { Automation } from '../models/automation.model.js';
 import { AutomationExecutor } from '../services/automation-executor.service.js';
-import { sendEmail } from '../utils/nodemailer.js';
 
 export const createAutomation = async (req: Request, res: Response) => {
   try {
@@ -79,16 +78,11 @@ export const testAutomation = async (req: Request, res: Response) => {
       return;
     }
 
+    console.log(`[testAutomation] Triggering background execution for ID: ${id}, Email: ${email}`);
     // Trigger background execution
     AutomationExecutor.execute(id, email).catch((err) =>
-      console.error('Background execution error:', err),
+      console.error('[testAutomation] Background execution error:', err),
     );
-    await sendEmail({
-      to: email,
-      subject: 'Test Automation',
-      text: 'Test automation has been started',
-    });
-
     res.json({ message: 'Test run started in background' });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'An error occurred';

@@ -1,0 +1,21 @@
+{
+  "version": 2,
+
+  "framework": null,
+
+  "builds": [
+    {
+      "src": "src/server.ts",
+      "use": "@vercel/node",
+      "config": { "includeFiles": ["src/**/*"] }
+    }
+  ],
+
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/src/server.ts",
+      "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+    }
+  ]
+}

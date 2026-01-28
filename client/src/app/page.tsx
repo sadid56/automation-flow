@@ -1,9 +1,10 @@
 "use client";
 
-import { Plus, Edit2, Trash2, Play, Loader2, Mail } from "lucide-react";
+import { Plus, Edit2, Trash2, Play, Loader2, Mail, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useAutomations, useCreateAutomation, useDeleteAutomation, useTestAutomation } from "@/hooks/useAutomation";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { format } from "date-fns";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +30,7 @@ export default function AutomationsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showTestPrompt, setShowTestPrompt] = useState<string | null>(null);
   const [testEmail, setTestEmail] = useState("");
+  const [validationError, setValidationError] = useState<string | null>(null);
   const { mutate: runTest, isPending: isTesting } = useTestAutomation(showTestPrompt || "");
 
   const handleCreate = (e: React.FormEvent) => {
@@ -61,6 +63,22 @@ export default function AutomationsPage() {
     }
   };
 
+  const handleTestClick = (automationId: string) => {
+    const automation = automations?.find((a) => a._id === automationId);
+    if (!automation) return;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const hasActionNode = automation.nodes.some((node: any) => node.type === "action");
+
+    if (!hasActionNode) {
+      setValidationError("This automation doesn't have any email nodes. Please add at least one email action node to send emails.");
+      return;
+    }
+
+    setValidationError(null);
+    setShowTestPrompt(automationId);
+  };
+
   const handleTest = (e: React.FormEvent) => {
     e.preventDefault();
     if (showTestPrompt && testEmail) {
@@ -75,18 +93,13 @@ export default function AutomationsPage() {
 
   return (
     <div className='min-h-screen bg-gray-50/50 p-8'>
-      <div className='max-w-6xl mx-auto'>
+      <div className='container mx-auto'>
         <div className='flex justify-between items-center mb-10'>
           <div>
             <h1 className='text-3xl font-extrabold text-gray-900 tracking-tight'>Automations</h1>
             <p className='text-muted-foreground mt-1'>Build and manage your high-performance messaging workflows.</p>
           </div>
-          <Button
-            onClick={() => setIsCreateDialogOpen(true)}
-            disabled={isCreating}
-            size='lg'
-            className='rounded-xl font-bold shadow-lg hover:shadow-blue-500/25 transition-all'
-          >
+          <Button onClick={() => setIsCreateDialogOpen(true)} disabled={isCreating} size='lg' className='rounded-xl font-bold '>
             {isCreating ? <Loader2 className='w-4 h-4 mr-2 animate-spin' /> : <Plus className='w-4 h-4 mr-2' />}
             Create Automation
           </Button>
@@ -105,6 +118,7 @@ export default function AutomationsPage() {
                   <TableHead className='py-4 px-8 font-bold text-gray-400 uppercase tracking-widest text-[10px]'>Name</TableHead>
                   <TableHead className='py-4 px-8 font-bold text-gray-400 uppercase tracking-widest text-[10px]'>Nodes</TableHead>
                   <TableHead className='py-4 px-8 font-bold text-gray-400 uppercase tracking-widest text-[10px]'>Created At</TableHead>
+                  <TableHead className='py-4 px-8 font-bold text-gray-400 uppercase tracking-widest text-[10px]'>Last Updated</TableHead>
                   <TableHead className='py-4 px-8 font-bold text-gray-400 uppercase tracking-widest text-[10px] text-right'>
                     Actions
                   </TableHead>
@@ -113,7 +127,7 @@ export default function AutomationsPage() {
               <TableBody>
                 {automations?.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className='py-20 text-center'>
+                    <TableCell colSpan={5} className='py-20 text-center'>
                       <div className='flex flex-col items-center gap-3'>
                         <div className='w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center opacity-50'>
                           <Mail className='w-8 h-8 text-slate-300' />
@@ -126,16 +140,18 @@ export default function AutomationsPage() {
                   automations?.map((auto) => (
                     <TableRow key={auto._id} className='group hover:bg-slate-50/50 transition-colors'>
                       <TableCell className='py-5 px-8'>
-                        <span className='font-bold text-slate-800 group-hover:text-blue-600 transition-colors'>{auto.name}</span>
+                        <span className='font-bold text-slate-800 transition-colors'>{auto.name}</span>
                       </TableCell>
                       <TableCell className='py-5 px-8'>
                         <div className='flex items-center gap-2'>
-                          <div className='w-1.5 h-1.5 rounded-full bg-blue-500' />
                           <span className='text-xs font-semibold text-slate-600'>{auto.nodes.length} Steps</span>
                         </div>
                       </TableCell>
                       <TableCell className='py-5 px-8'>
-                        <span className='text-sm text-slate-400'>{new Date(auto.createdAt).toLocaleDateString()}</span>
+                        <span className='text-sm text-slate-400'>{format(new Date(auto.createdAt), "MMM dd, yyyy")}</span>
+                      </TableCell>
+                      <TableCell className='py-5 px-8'>
+                        <span className='text-sm text-slate-400'>{format(new Date(auto.updatedAt), "MMM dd, yyyy")}</span>
                       </TableCell>
                       <TableCell className='py-5 px-8 text-right'>
                         <div className='flex justify-end gap-1'>
@@ -143,7 +159,7 @@ export default function AutomationsPage() {
                             variant='ghost'
                             size='sm'
                             className='text-green-600 hover:bg-green-50 rounded-lg hover:text-green-700 h-9 w-9 p-0'
-                            onClick={() => setShowTestPrompt(auto._id)}
+                            onClick={() => handleTestClick(auto._id)}
                           >
                             <Play className='w-4 h-4' />
                           </Button>
@@ -212,7 +228,7 @@ export default function AutomationsPage() {
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This will permanently delete the automation and all its associated data. This action cannot be undone.
             </AlertDialogDescription>
@@ -228,7 +244,7 @@ export default function AutomationsPage() {
               disabled={isDeleting}
             >
               {isDeleting && <Loader2 className='w-4 h-4 mr-2 animate-spin' />}
-              Delete Automation
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -275,6 +291,24 @@ export default function AutomationsPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Validation Error Alert */}
+      <AlertDialog open={!!validationError} onOpenChange={(open) => !open && setValidationError(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className='flex items-center gap-3'>
+              <div className='w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center'>
+                <AlertCircle className='w-6 h-6 text-amber-600' />
+              </div>
+              <AlertDialogTitle>Missing Email Nodes</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className='pt-2'>{validationError}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setValidationError(null)}>Got it</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

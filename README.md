@@ -95,9 +95,9 @@ This project consists of a client-side application built with Next.js and a serv
 
 ### Client
 
-- Next.js 15
-- React 19
-- Tailwind CSS 4
+- Next.js
+- React
+- Tailwind CSS
 - TypeScript
 - TanStack Query
 - React Hook Form + Zod

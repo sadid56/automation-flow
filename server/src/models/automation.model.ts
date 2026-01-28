@@ -2,8 +2,8 @@ import { Schema, model, Document } from 'mongoose';
 
 export interface IAutomation extends Document {
   name: string;
-  nodes: Record<string, unknown>[];
-  edges: Record<string, unknown>[];
+  nodes: any;
+  edges: any;
   createdAt: Date;
   updatedAt: Date;
 }

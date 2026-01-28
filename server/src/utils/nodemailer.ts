@@ -19,11 +19,27 @@ export async function sendEmail({
   html?: string;
   text?: string;
 }) {
-  await transporter.sendMail({
-    from: `"MessageMind" <${process.env.GOOGLE_APP_EMAIL}>`,
-    to,
-    subject,
-    text,
-    html,
-  });
+  try {
+    console.log(`[sendEmail] Attempting to send email to: ${to}, Service: gmail`);
+    console.log(
+      `[sendEmail] Using Auth Email: ${process.env.GOOGLE_APP_EMAIL ? 'PRESENT' : 'MISSING'}`,
+    );
+    console.log(
+      `[sendEmail] Using Auth Password: ${process.env.GOOGLE_APP_PASSWORD ? 'PRESENT' : 'MISSING'}`,
+    );
+
+    const info = await transporter.sendMail({
+      from: `"MessageMind" <${process.env.GOOGLE_APP_EMAIL}>`,
+      to,
+      subject,
+      text,
+      html,
+    });
+
+    console.log(`[sendEmail] Email sent successfully. Message ID: ${info.messageId}`);
+    return info;
+  } catch (error) {
+    console.error(`[sendEmail] Error sending email:`, error);
+    throw error;
+  }
 }

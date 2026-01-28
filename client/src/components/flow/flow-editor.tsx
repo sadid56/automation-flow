@@ -158,17 +158,20 @@ export function FlowEditor({ initialData, onSave }: FlowEditorProps) {
         </ReactFlow>
       </div>
 
-      {selectedNode && (
-        <NodeSidebar
-          node={selectedNode}
-          onUpdate={(data: Automation) => updateNodeData(selectedNode.id, data)}
-          onDelete={() => {
+      <NodeSidebar
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        node={selectedNode || ({ id: "", type: "", data: {} } as any)}
+        isOpen={!!selectedNode}
+        onClose={() => setSelectedNodeId(null)}
+        onUpdate={(data: Automation) => selectedNode && updateNodeData(selectedNode.id, data)}
+        onDelete={() => {
+          if (selectedNode) {
             setNodes((nds) => nds.filter((n) => n.id !== selectedNode.id));
             setEdges((eds) => eds.filter((e) => e.source !== selectedNode.id && e.target !== selectedNode.id));
             setSelectedNodeId(null);
-          }}
-        />
-      )}
+          }
+        }}
+      />
     </div>
   );
 }

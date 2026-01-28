@@ -1,30 +1,39 @@
-import { app } from './app';
-import { config } from './config/index';
-import connectDB from './lib/db';
+import { Server } from 'http';
 import mongoose from 'mongoose';
+import { app } from './app.js';
+import { config } from './config/index.js';
 
-const PORT = config.port;
+let server: Server;
 
-connectDB()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`🚀 Server is running on http://localhost:${PORT}/api/${config.apiVersion}`);
+async function main() {
+  try {
+    await mongoose.connect(config.mongoUri);
+
+    if (!process.env.VERCEL) {
+      server = app.listen(config.port, () => {
+        console.log(`app is listening on port ${config.port}`);
+      });
+    }
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+main();
+
+process.on('unhandledRejection', (err) => {
+  console.log(`😈 unahandledRejection is detected , shutting down ...`, err);
+  if (server) {
+    server.close(() => {
+      process.exit(1);
     });
-  })
-  .catch((err) => {
-    console.log('MONGO DB connection failed !!! ', err);
-  });
-
-process.on('unhandledRejection', async (err) => {
-  console.log('UNHANDLED REJECTION! 💥 Shutting down...');
-  console.log(err);
-  await mongoose.disconnect();
+  }
   process.exit(1);
 });
 
-process.on('uncaughtException', async (err) => {
-  console.log('UNCAUGHT EXCEPTION! 💥 Shutting down...');
-  console.log(err);
-  await mongoose.disconnect();
+process.on('uncaughtException', () => {
+  console.log(`😈 uncaughtException is detected , shutting down ...`);
   process.exit(1);
 });
+
+export default app;

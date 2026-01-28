@@ -3,7 +3,7 @@ import { toast } from "sonner";
 
 type MutationOptions<TData, TVariables> = {
   mutationFn: (variables: TVariables) => Promise<TData>;
-  invalidateKeys?: readonly (readonly any[])[];
+  invalidateKeys?: readonly (readonly unknown[])[];
   successMessage?: string;
   errorMessage?: string;
 };
@@ -25,6 +25,7 @@ export function useAppMutation<TData, TVariables>({
 
       if (successMessage) toast.success(successMessage);
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       toast.error(error?.message || errorMessage || "Something went wrong");
     },

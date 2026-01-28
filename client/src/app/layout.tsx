@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MessageMind | Email Automation Flow Builder",
+  title: "Email Automation Flow Builder",
   description: "Visually create email automations using a flow editor.",
 };
 

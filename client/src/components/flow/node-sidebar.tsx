@@ -1,57 +1,88 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { X, Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 
-export function NodeSidebar({ node, onUpdate, onDelete }: any) {
+interface NodeSidebarProps {
+  node: {
+    id: string;
+    type: string;
+    data: any;
+  };
+  isOpen: boolean;
+  onClose: () => void;
+  onUpdate: (data: any) => void;
+  onDelete: () => void;
+}
+
+export function NodeSidebar({ node, isOpen, onClose, onUpdate, onDelete }: NodeSidebarProps) {
   const { type, data } = node;
 
   return (
-    <div className='w-80 h-full bg-white border-l shadow-xl p-6 overflow-y-auto'>
-      <div className='flex items-center justify-between mb-6 pb-4 border-b'>
-        <h2 className='text-lg font-bold text-gray-900 uppercase tracking-tight'>{type} Node</h2>
-        <Button
-          variant='ghost'
-          size='icon'
-          onClick={() => onDelete()}
-          className='text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full h-8 w-8'
-        >
-          <Trash2 className='w-4 h-4' />
-        </Button>
-      </div>
+    <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()} direction='right'>
+      <DrawerContent className='h-full right-0 left-auto mt-0 w-80 rounded-none border-l'>
+        <div className='flex flex-col h-full'>
+          <DrawerHeader className='border-b px-6 py-4'>
+            <div className='flex items-center justify-between'>
+              <DrawerTitle className='text-lg font-bold text-gray-900 uppercase tracking-tight'>{type} Node</DrawerTitle>
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={() => onDelete()}
+                className='text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full h-8 w-8'
+              >
+                <Trash2 className='w-4 h-4' />
+              </Button>
+            </div>
+            <DrawerDescription className='text-xs text-muted-foreground mt-1'>Configure your automation node settings.</DrawerDescription>
+          </DrawerHeader>
 
-      <div className='space-y-6'>
-        {type === "action" && (
-          <div className='space-y-4'>
-            <Label className='text-sm font-semibold'>Email Message</Label>
-            <Textarea
-              className='min-h-[200px] bg-slate-50 border-slate-200'
-              placeholder='Enter the email content here...'
-              value={data.message || ""}
-              onChange={(e) => onUpdate({ message: e.target.value })}
-            />
+          <div className='flex-1 overflow-y-auto p-6 space-y-6'>
+            {type === "action" && (
+              <div className='space-y-4'>
+                <Label className='text-sm font-semibold'>Email Message</Label>
+                <Textarea
+                  className='min-h-[200px] bg-slate-50 border-slate-200'
+                  placeholder='Enter the email content here...'
+                  value={data.message || ""}
+                  onChange={(e) => onUpdate({ message: e.target.value })}
+                />
+              </div>
+            )}
+
+            {type === "delay" && <DelayEditor data={data} onUpdate={onUpdate} />}
+
+            {type === "condition" && <ConditionEditor data={data} onUpdate={onUpdate} />}
+
+            {["start", "end"].includes(type) && (
+              <p className='text-sm text-gray-500 italic bg-gray-50 p-3 rounded-lg'>
+                This is a fixed {type} node. It marks the {type} of your automation flow and cannot be configured.
+              </p>
+            )}
           </div>
-        )}
-
-        {type === "delay" && <DelayEditor data={data} onUpdate={onUpdate} />}
-
-        {type === "condition" && <ConditionEditor data={data} onUpdate={onUpdate} />}
-
-        {["start", "end"].includes(type) && (
-          <p className='text-sm text-gray-500 italic bg-gray-50 p-3 rounded-lg'>
-            This is a fixed {type} node. It marks the {type} of your automation flow and cannot be configured.
-          </p>
-        )}
-      </div>
-    </div>
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }
 
-function DelayEditor({ data, onUpdate }: any) {
+interface DelayEditorProps {
+  data: {
+    delayType?: "relative" | "specific";
+    value?: string;
+    unit?: string;
+    date?: string;
+  };
+  onUpdate: (data: any) => void;
+}
+
+function DelayEditor({ data, onUpdate }: DelayEditorProps) {
   return (
     <div className='space-y-6'>
       <div className='space-y-3'>
@@ -105,7 +136,19 @@ function DelayEditor({ data, onUpdate }: any) {
   );
 }
 
-function ConditionEditor({ data, onUpdate }: any) {
+interface ConditionEditorProps {
+  data: {
+    rules?: Array<{
+      field: string;
+      operator: string;
+      value: string;
+      joinType: string | null;
+    }>;
+  };
+  onUpdate: (data: any) => void;
+}
+
+function ConditionEditor({ data, onUpdate }: ConditionEditorProps) {
   const rules = data.rules || [];
 
   const addRule = (joinType: string) => {
@@ -119,12 +162,12 @@ function ConditionEditor({ data, onUpdate }: any) {
   };
 
   const removeRule = (index: number) => {
-    onUpdate({ rules: rules.filter((_: any, i: number) => i !== index) });
+    onUpdate({ rules: rules.filter((_, i) => i !== index) });
   };
 
   const updateRule = (index: number, updates: any) => {
     onUpdate({
-      rules: rules.map((r: any, i: number) => (i === index ? { ...r, ...updates } : r)),
+      rules: rules.map((r, i) => (i === index ? { ...r, ...updates } : r)),
     });
   };
 
@@ -139,7 +182,7 @@ function ConditionEditor({ data, onUpdate }: any) {
           </p>
         )}
 
-        {rules.map((rule: any, index: number) => (
+        {rules.map((rule, index) => (
           <div key={index} className='p-4 border rounded-xl bg-gray-50 space-y-3 relative group'>
             {rule.joinType && (
               <div className='absolute -top-3 left-4 bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm'>
@@ -185,7 +228,7 @@ function ConditionEditor({ data, onUpdate }: any) {
             onClick={() => addRule("AND")}
             className='text-purple-600 border-purple-200 hover:bg-purple-50 hover:text-purple-700 font-bold text-[10px]'
           >
-            <Plus className='w-3 h-3 mr-1' /> AND
+            Plus AND
           </Button>
           <Button
             variant='outline'
@@ -193,7 +236,7 @@ function ConditionEditor({ data, onUpdate }: any) {
             onClick={() => addRule("OR")}
             className='text-purple-600 border-purple-200 hover:bg-purple-50 hover:text-purple-700 font-bold text-[10px]'
           >
-            <Plus className='w-3 h-3 mr-1' /> OR
+            Plus OR
           </Button>
         </div>
       </div>
